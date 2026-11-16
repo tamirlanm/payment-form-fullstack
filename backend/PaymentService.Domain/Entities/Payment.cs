@@ -41,6 +41,10 @@ public class Payment
         {
             throw new ArgumentOutOfRangeException(nameof(amount), "Сумма должна быть больше нуля.");
         }
+        if(!Enum.IsDefined(currency))
+        {
+            throw new ArgumentException("Неподдерживаемая валюта", nameof(currency)); 
+        }
 
         Id = Guid.NewGuid();
         WalletNumber = walletNumber.Trim();
