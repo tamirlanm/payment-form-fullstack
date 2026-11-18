@@ -29,6 +29,10 @@ public class Payment
         {
             throw new ArgumentException("Необходимо указать номер кошелька.", nameof(walletNumber));
         }
+        if(!walletNumber.All(c => c >= '0' && c <= '9'))
+        {
+            throw new ArgumentException("Номер кошелька должны содержать только цифры.", nameof(walletNumber));
+        }
         if (string.IsNullOrWhiteSpace(account))
         {
             throw new ArgumentException("Необходимо указать аккаунт.", nameof(account));
