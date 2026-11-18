@@ -19,9 +19,20 @@ builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService.Application.Services.PaymentService>();
 builder.Services.AddScoped<IValidator<CreatePaymentRequest>, CreatePaymentValidation>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreatePaymentValidation>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ReactFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173").WithHeaders("Content-Type", "X-API-KEY")
+                .WithMethods("GET", "POST");
+        });
+});
 var app = builder.Build();
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseRouting();
+app.UseCors("ReactFrontend");
 
 app.UseMiddleware<ApiKeyMiddleware>();
 
