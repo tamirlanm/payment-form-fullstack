@@ -34,6 +34,8 @@ public class ApiKeyMiddleware
             {
                 error = "Invalid or missing Api Key."
             });
+
+            return;
         }
         
         await _next(context);
