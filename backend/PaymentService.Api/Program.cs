@@ -24,7 +24,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("ReactFrontend",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173").WithHeaders("Content-Type", "X-API-KEY")
+            policy.WithOrigins("http://localhost:5173", "http://localhost:4173").WithHeaders("Content-Type", "X-API-KEY")
                 .WithMethods("GET", "POST");
         });
 });
