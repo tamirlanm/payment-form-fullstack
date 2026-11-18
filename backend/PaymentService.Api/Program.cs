@@ -1,10 +1,14 @@
+using Microsoft.EntityFrameworkCore;
+using PaymentService.Infrastructure.Persistence;
+
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found'");
 // Add services to the container.
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddDbContext<PaymentDbContext>(options => options.UseNpgsql(connectionString));
 
 var app = builder.Build();
 
