@@ -8,11 +8,9 @@ namespace PaymentService.Application.Validators;
 
 public class CreatePaymentValidation : AbstractValidator<CreatePaymentRequest>
 {
-    // private readonly IPaymentRepository _paymentRepository;
     public CreatePaymentValidation(IPaymentRepository paymentRepository)
     {
-        // _paymentRepository = paymentRepository;
-        RuleFor(x => x.WalletNumber).NotEmpty().WithMessage("Wallet Number is required").MaximumLength(50);
+        RuleFor(x => x.WalletNumber).NotEmpty().WithMessage("Wallet Number is required").MaximumLength(50).Matches(@"^\d+$").WithMessage("Wallet Number must contain only digits");
         
         RuleFor(x => x.Account).NotEmpty().WithMessage("Account is required").MaximumLength(100);
         
