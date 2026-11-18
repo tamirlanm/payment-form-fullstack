@@ -36,7 +36,8 @@ services:
       ApiSecurityKey__Key: ${API_SECURITY_KEY}
 
     depends_on:
-      - db
+      db:
+        condition: service_healthy
   
   frontend:
     build: 
@@ -49,8 +50,7 @@ services:
       - "127.0.0.1:4173:4173"
 
     depends_on:
-      db:
-        condition: service_healthy
+      - api
 
     
 

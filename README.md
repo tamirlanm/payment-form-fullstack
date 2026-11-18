@@ -1,91 +1,200 @@
-[English](README.md) | [Русский](README_RU.md)
+
 # Payment Management System
 
-A full-stack application for collecting, storing, and viewing payment records.
+[**English**](README.md) | [Русский](README_RU.md)
 
-The application provides payment creation, transaction history, and aggregated statistics through a REST API and a React-based interface.
+A full-stack payment record management application built with **ASP.NET Core 10, React, TypeScript, PostgreSQL, and Docker**.
 
-> This project is a demonstration system. It does not process real money or perform actual financial transactions.
+The application allows users to create payment records, view transaction history, and analyze aggregated statistics through a REST API and web interface.
 
-## Tech Stack
-
-### Backend
-- C# / .NET 10
-- ASP.NET Core Web API
-- Entity Framework Core
-- PostgreSQL 18
-- FluentValidation
-- API Key authentication
-
-### Frontend
-- React 19
-- TypeScript
-- Vite
-- CSS
-
-### Infrastructure
-- Docker Compose
-- EF Core Migrations
+> **Disclaimer:** This is a demonstration project. It does not process real payments or integrate with payment gateways.
 
 ## Features
 
-- Create payment records
-- Validate payment data on both client and server
+- Create and store payment records
+- Client-side and server-side validation
 - View transaction history
-- View aggregated statistics by currency and UTC date
-- Protect API endpoints using an API Key
-- Handle application errors through centralized middleware
+- View payment statistics grouped by currency and UTC date
+- Protect REST API endpoints with an API Key
+- Centralized API error handling
+- Persistent PostgreSQL storage
+- Run the complete application using Docker Compose
+
+## Tech Stack
+
+| Component | Technologies |
+|-----------|--------------|
+| Backend | C#, .NET 10, ASP.NET Core Web API |
+| Frontend | React 19, TypeScript, Vite, CSS |
+| Database | PostgreSQL 18 |
+| ORM | Entity Framework Core, Npgsql |
+| Validation | FluentValidation |
+| Infrastructure | Docker, Docker Compose |
+| Security | API Key middleware |
 
 ## Architecture
 
-The backend follows a layered architecture:
+The backend is organized into four layers:
 
-- **Domain:** Entities, enums, and business rules
-- **Application:** DTOs, interfaces, validators, and services
-- **Infrastructure:** EF Core, database context, and repositories
-- **API:** Controllers, middleware, and dependency injection
+- **Domain:** Payment entity, enums, and business rules
+- **Application:** DTOs, validators, interfaces, and services
+- **Infrastructure:** EF Core, database configuration, repositories, and migrations
+- **API:** REST controllers, middleware, and dependency injection
 
-## Prerequisites
+### Project Structure
 
-- .NET 10 SDK
-- Node.js and npm
-- Docker Desktop with Docker Compose
-- EF Core CLI tools (version 10.x)
+```text
+payment-form-fullstack/
+├── backend/
+│   ├── PaymentService.Api/
+│   ├── PaymentService.Application/
+│   ├── PaymentService.Domain/
+│   ├── PaymentService.Infrastructure/
+│   ├── DockerFile
+│   └── PaymentService.slnx
+├── frontend/
+│   ├── src/
+│   ├── DockerFile
+│   └── package.json
+├── docker-compose.yml
+├── .env.example
+├── README.md
+└── README_RU.md
+```
 
-## Getting Started
+## Quick Start — Docker Compose (Recommended)
 
-### 1. Clone the repository
+### Prerequisites
+
+- Docker Desktop
+- Docker Compose
+- Git
+
+**You do not need to install .NET SDK, Node.js, or PostgreSQL locally when using Docker.**
+
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/tamirlanm/payment-form-fullstack.git
 cd payment-form-fullstack
 ```
 
-### 2. Configure PostgreSQL
+### 2. Configure Environment Variables
 
-Copy `.env.example` to `.env` and set a local database password.
+Create a `.env` file from the provided example.
 
-On Windows PowerShell:
+**Windows PowerShell:**
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Example:
-
-```dotenv
-POSTGRES_PASSWORD=your_local_password
-```
-
-Start PostgreSQL:
+**Linux / macOS:**
 
 ```bash
-docker compose up -d
+cp .env.example .env
 ```
 
-The PostgreSQL container is accessible on `localhost:5433`.
+Edit `.env` and provide your own values:
 
-### 3. Configure the backend
+```dotenv
+POSTGRES_PASSWORD=your_local_database_password
+API_SECURITY_KEY=your_long_random_demo_key
+```
+
+The database password is used by PostgreSQL and the backend API.
+
+The API Key is required to access payment endpoints.
+
+**Do not commit `.env` or share real credentials.**
+
+### 3. Build and Start All Containers
+
+Run from the project root:
+
+```bash
+docker compose up -d --build
+```
+
+Docker Compose starts three services:
+
+| Service | Description | Address |
+|---------|-------------|---------|
+| frontend | React application (Vite Preview) | http://localhost:4173 |
+| api | ASP.NET Core Web API | http://localhost:8080 |
+| db | PostgreSQL 18 | localhost:5433 |
+
+The PostgreSQL service has a health check. The API waits for the database to become healthy.
+
+On API startup, Entity Framework Core automatically applies pending migrations.
+
+**No manual database migration commands are required for Docker startup.**
+
+### 4. Open the Application
+
+Open:
+
+**http://localhost:4173**
+
+Enter the API Key from your `.env` file into the connection form and click **Connect**.
+
+You can now:
+- Create payment records
+- View payment history
+- View payment statistics
+
+### 5. Verify Running Containers
+
+```bash
+docker compose ps
+```
+
+View API logs:
+
+```bash
+docker compose logs -f api
+```
+
+View frontend logs:
+
+```bash
+docker compose logs -f frontend
+```
+
+### 6. Stop the Application
+
+```bash
+docker compose down
+```
+
+PostgreSQL data is stored in a persistent Docker volume and is preserved after normal container shutdown.
+
+**Warning:** `docker compose down -v` also removes the database volume and its stored data.
+
+---
+
+## Local Development (Without Full Docker Setup)
+
+This option is intended for developers who want to run the backend and frontend directly on their computers.
+
+### Requirements
+
+- .NET 10 SDK
+- Node.js 22 and npm
+- Docker Desktop
+- EF Core CLI tools (version 10.x)
+
+### 1. Start PostgreSQL Only
+
+Make sure your root `.env` file is configured, then run:
+
+```bash
+docker compose up -d db
+```
+
+PostgreSQL will be accessible at `localhost:5433`.
+
+### 2. Configure the Backend
 
 Copy the example configuration:
 
@@ -93,54 +202,59 @@ Copy the example configuration:
 Copy-Item backend/PaymentService.Api/appsettings.Development.example.json backend/PaymentService.Api/appsettings.Development.json
 ```
 
-Update `DefaultConnection` with the same PostgreSQL password used in `.env`.
+Set the local database password and API Key:
 
-Set a random local API Key under `ApiSecurityKey:Key`.
-
-Do not commit passwords or API keys to Git.
-
-### 4. Apply database migrations
-
-Install the EF Core CLI if it is not already installed:
-
-```bash
-dotnet tool install --global dotnet-ef --version 10.0.15
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5433;Database=payment_service_db;Username=payment_user;Password=your_local_database_password"
+  },
+  "ApiSecurityKey": {
+    "Key": "your_long_random_demo_key"
+  }
+}
 ```
 
-Apply migrations from the repository root:
+### 3. Apply Migrations
+
+Install the EF Core CLI if required:
+
+```bash
+dotnet tool install --global dotnet-ef --version 10.*
+```
+
+Apply migrations:
 
 ```bash
 dotnet ef database update --project backend/PaymentService.Infrastructure --startup-project backend/PaymentService.Api --context PaymentDbContext
 ```
 
-This creates the required database schema and tables.
-
-### 5. Run the backend
+### 4. Start the Backend
 
 ```bash
 dotnet run --project backend/PaymentService.Api --launch-profile http
 ```
 
-Default API address:
+Backend URL:
 
 `http://localhost:5190`
 
-### 6. Run the frontend
+### 5. Start the Frontend
 
-Navigate to `frontend`:
+From the `frontend` directory:
 
 ```bash
 cd frontend
-npm install
+npm ci
 ```
 
-Create `.env.local` if the API address differs from the default:
+Create `frontend/.env.local`:
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:5190
 ```
 
-Start Vite:
+Run the development server:
 
 ```bash
 npm run dev
@@ -150,25 +264,31 @@ Open:
 
 `http://localhost:5173`
 
-## API Endpoints
+The frontend connects directly to the local backend using the configured API address.
+
+---
+
+## REST API
+
+All payment endpoints require the following HTTP header:
+
+```http
+X-API-Key: your_long_random_demo_key
+```
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/payments` | Create a payment |
-| GET | `/api/payments` | Get payment history |
-| GET | `/api/payments/stats` | Get payment statistics |
+| GET | `/api/payments` | Retrieve payment history |
+| GET | `/api/payments/stats` | Retrieve payment statistics |
 
-### API Security
-
-Payment endpoints require the following header:
+### Example Payment Request
 
 ```http
-X-API-Key: your_demo_api_key
+POST http://localhost:8080/api/payments
+Content-Type: application/json
+X-API-Key: your_long_random_demo_key
 ```
-
-For local demonstration, the frontend allows entering the API key manually. It is held in memory and is not intended for use with production credentials.
-
-## Example Payment Request
 
 ```json
 {
@@ -182,59 +302,115 @@ For local demonstration, the frontend allows entering the API key manually. It i
 }
 ```
 
-Supported currencies: USD, EUR, RUB.
+A successful request returns HTTP `201 Created` with payment details.
 
-## Statistics
+### Supported Currencies
 
-The API provides:
-- Total payment count
-- Total amounts and counts grouped by currency
-- Daily payment amounts and counts grouped by UTC date
+- RUB
+- USD
+- EUR
 
-Amounts in different currencies are not added together.
+### Validation
 
-## Validation
-
-The application checks:
+The backend validates:
 - Required fields
-- Wallet number format and length
+- Wallet numbers containing ASCII digits
 - Email format
-- Optional phone number format
-- Positive payment amounts
+- Optional phone number in international format
+- Positive amounts with up to two decimal places
 - Supported currencies
-- Comment length
+- Field length limits
 
-## Build and Verification
+Invalid requests return HTTP `400 Bad Request`.
 
-Backend:
+Missing or incorrect API Keys return HTTP `401 Unauthorized`.
+
+## Payment Status
+
+The domain defines two payment statuses:
+
+- `Created`
+- `Rejected`
+
+New valid payment records are created with status `Created`.
+
+The `Rejected` status is defined in the domain model, but no separate rejection workflow is currently implemented.
+
+## Payment Statistics
+
+The statistics endpoint returns:
+- Total payment count
+- Payment counts grouped by currency
+- Total amounts grouped by currency
+- Daily transaction counts and totals using UTC dates
+
+Amounts belonging to different currencies are not combined because no exchange-rate conversion is performed.
+
+## Build Verification
+
+Build the backend:
 
 ```bash
 dotnet build backend/PaymentService.slnx
 ```
 
-Frontend:
+Build and lint the frontend:
 
 ```bash
 cd frontend
+npm ci
 npm run build
 npm run lint
 ```
 
-## Stopping the Database
+## Troubleshooting
+
+### API Returns 401 Unauthorized
+
+Check that the API Key entered in the frontend matches `API_SECURITY_KEY` in the root `.env` file for Docker, or `ApiSecurityKey:Key` in the local backend configuration.
+
+### Database Connection Failure
+
+Check container status:
 
 ```bash
-docker compose down
+docker compose ps
 ```
 
-The database volume is preserved by default.
+View database logs:
 
-## Limitations
+```bash
+docker compose logs db
+```
 
-- No real payment processing
-- No payment gateway integration
-- API Key protection is intended for demonstration, not end-user authentication
-- Aggregated statistics are calculated using application-level LINQ
+If the database volume was initialized with a different password, updating `.env` alone does not change the existing PostgreSQL user's password.
 
-## License
+### API Container Fails During Startup
 
-For educational and demonstration purposes.
+Check API logs:
+
+```bash
+docker compose logs api
+```
+
+The API applies pending EF Core migrations at startup when `Database__ApplyMigrations=true`.
+
+### Frontend Shows "Failed to fetch"
+
+Check that the backend is running at `http://localhost:8080` in Docker mode or `http://localhost:5190` in local development mode.
+
+For local development, also verify the frontend CORS origin and `VITE_API_BASE_URL`.
+
+## Security and Limitations
+
+- This is a demonstration application, not a production payment system.
+- No actual money transfers are performed.
+- No payment gateway integration is implemented.
+- The API Key mechanism provides simple request protection, not end-user authentication.
+- Manually entering an API Key in the browser is intended for local demonstrations only.
+- Transaction history and statistics are loaded and aggregated in application memory; database-side aggregation and pagination would be preferable for larger datasets.
+- The frontend uses Vite Preview for Docker-based demonstration, not a production-grade web server.
+
+## Project Purpose
+
+Developed as a full-stack .NET demonstration project to showcase REST APIs, layered architecture, data validation, database persistence, and Docker-based deployment.

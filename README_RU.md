@@ -2,190 +2,309 @@
 
 [English](README.md) | **Русский**
 
-Веб-приложение для создания, хранения и просмотра записей о платежах. Система предоставляет REST API, историю операций и агрегированную статистику по валютам и датам.
+Полноценное веб-приложение для управления записями о платежах, разработанное с использованием **ASP.NET Core 10, React, TypeScript, PostgreSQL и Docker**.
 
-> **Демонстрационный проект:** приложение не проводит реальные денежные операции, не интегрируется с платёжными шлюзами и не предназначено для хранения настоящих платёжных реквизитов.
+Приложение позволяет создавать платежи, просматривать историю операций и получать агрегированную статистику через REST API и веб-интерфейс.
+
+> **Важно:** это демонстрационный проект. Он не выполняет реальные денежные переводы и не интегрирован с платёжными системами.
 
 ## Возможности
 
-- Создание платежа через веб-форму.
-- Проверка входных данных на frontend и backend.
-- Просмотр истории операций с датой, аккаунтом, email, суммой, валютой и статусом.
-- Статистика: общее количество операций, суммы и количество по валютам, ежедневные агрегаты по UTC.
-- Защита API-запросов заголовком `X-API-Key`.
-- Централизованная обработка ошибок.
-- Хранение данных в PostgreSQL через Entity Framework Core.
+- Создание и сохранение записей о платежах
+- Валидация данных на frontend и backend
+- Просмотр истории операций
+- Статистика платежей по валютам и датам UTC
+- Защита REST API с помощью API Key
+- Централизованная обработка ошибок
+- Хранение информации в PostgreSQL
+- Запуск всего приложения одной командой через Docker Compose
 
-## Технологии
+## Используемые технологии
 
 | Компонент | Технологии |
-| --- | --- |
-| Backend | C# / .NET 10, ASP.NET Core Web API |
-| Архитектура | Domain, Application, Infrastructure, API |
-| Работа с данными | Entity Framework Core, Npgsql, PostgreSQL 18 |
+|-----------|------------|
+| Backend | C#, .NET 10, ASP.NET Core Web API |
+| Frontend | React 19, TypeScript, Vite, CSS |
+| База данных | PostgreSQL 18 |
+| ORM | Entity Framework Core, Npgsql |
 | Валидация | FluentValidation |
-| Frontend | React, TypeScript, Vite, CSS |
-| Инфраструктура | Docker Compose (PostgreSQL), EF Core Migrations |
+| Инфраструктура | Docker, Docker Compose |
+| Безопасность | API Key Middleware |
 
-## Структура проекта
+## Архитектура
+
+Backend разделён на четыре слоя:
+
+- **Domain** — сущности, перечисления и бизнес-правила
+- **Application** — DTO, валидаторы, интерфейсы и сервисы
+- **Infrastructure** — EF Core, конфигурация базы данных, репозитории и миграции
+- **API** — контроллеры, middleware и настройка Dependency Injection
+
+### Структура проекта
 
 ```text
 payment-form-fullstack/
 ├── backend/
-│   ├── PaymentService.Api/             # Контроллеры, middleware, настройка DI
-│   ├── PaymentService.Application/     # DTO, валидаторы, интерфейсы, сервисы
-│   ├── PaymentService.Domain/          # Сущности и бизнес-правила
-│   ├── PaymentService.Infrastructure/  # EF Core, репозитории, миграции
+│   ├── PaymentService.Api/
+│   ├── PaymentService.Application/
+│   ├── PaymentService.Domain/
+│   ├── PaymentService.Infrastructure/
+│   ├── DockerFile
 │   └── PaymentService.slnx
-├── frontend/                           # React + TypeScript
+├── frontend/
+│   ├── src/
+│   ├── DockerFile
+│   └── package.json
 ├── docker-compose.yml
 ├── .env.example
 ├── README.md
 └── README_RU.md
 ```
 
-## Требования для запуска
+## Быстрый запуск через Docker Compose
 
-- .NET 10 SDK.
-- Node.js и npm, совместимые с установленным Vite.
-- Docker Desktop с Docker Compose.
-- Инструмент командной строки `dotnet-ef` версии 10.x для применения миграций.
+**Рекомендуемый способ запуска проекта.**
 
-Порт API по существующему профилю запуска — `5190`, frontend по умолчанию использует `5173`, PostgreSQL доступен с компьютера через `5433`.
+### Требования
 
-## Быстрый запуск
+- Docker Desktop
+- Docker Compose
+- Git
 
-Все команды ниже выполняются из **корня репозитория**, если не указано иное. Примеры рассчитаны на PowerShell в Windows.
+**При использовании Docker не нужно отдельно устанавливать .NET SDK, Node.js или PostgreSQL.**
 
-### 1. Скачать проект
+### 1. Клонирование репозитория
 
-```powershell
+```bash
 git clone https://github.com/tamirlanm/payment-form-fullstack.git
 cd payment-form-fullstack
 ```
 
-### 2. Запустить PostgreSQL
+### 2. Настройка переменных окружения
 
-Создайте локальный `.env` на основе `.env.example`:
+Создайте `.env` на основе файла `.env.example`.
+
+Для Windows PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Впишите в `.env` свой локальный пароль:
+Для Linux / macOS:
 
-```dotenv
-POSTGRES_PASSWORD=replace_with_local_password
+```bash
+cp .env.example .env
 ```
 
-Если в репозитории ещё нет `.env.example`, создайте его с такой же переменной и **без настоящего пароля**.
+Откройте `.env` и укажите значения:
 
-Запустите контейнер:
+```dotenv
+POSTGRES_PASSWORD=your_local_database_password
+API_SECURITY_KEY=your_long_random_demo_key
+```
 
-```powershell
-docker compose up -d
+Где:
+
+- `POSTGRES_PASSWORD` — пароль пользователя PostgreSQL.
+- `API_SECURITY_KEY` — демонстрационный ключ для доступа к REST API.
+
+**Не добавляйте настоящий `.env` с секретами в публичный репозиторий.**
+
+### 3. Сборка и запуск контейнеров
+
+В корне проекта выполните:
+
+```bash
+docker compose up -d --build
+```
+
+Docker Compose соберёт и запустит три сервиса:
+
+| Контейнер | Назначение | Адрес |
+|-----------|------------|-------|
+| frontend | React + Vite Preview | http://localhost:4173 |
+| api | ASP.NET Core Web API | http://localhost:8080 |
+| db | PostgreSQL 18 | localhost:5433 |
+
+Для PostgreSQL настроен `healthcheck`. Backend ожидает готовности базы данных перед запуском.
+
+При запуске API автоматически применяет необходимые миграции Entity Framework Core.
+
+**При запуске через Docker вручную применять миграции не требуется.**
+
+### 4. Открытие приложения
+
+Откройте в браузере:
+
+**http://localhost:4173**
+
+В интерфейсе:
+
+1. Введите API Key из вашего файла `.env`.
+2. Нажмите кнопку **Connect**.
+3. Создайте тестовый платёж.
+4. Откройте историю операций и статистику.
+
+### 5. Проверка состояния контейнеров
+
+```bash
 docker compose ps
 ```
 
-Конфигурация проекта использует:
+Просмотр логов backend:
 
-- Базу данных: `payment_service_db`.
-- Пользователя: `payment_user`.
-- Адрес подключения с компьютера: `localhost:5433`.
+```bash
+docker compose logs -f api
+```
 
-**Примечание:** PostgreSQL внутри Docker и PostgreSQL, установленный непосредственно на компьютере, — разные экземпляры. Данные контейнера хранятся в Docker Volume.
+Просмотр логов frontend:
 
-### 3. Настроить backend
+```bash
+docker compose logs -f frontend
+```
 
-В каталоге `backend/PaymentService.Api/` создайте локальный файл `appsettings.Development.json` (его нельзя коммитить с секретами):
+### 6. Остановка приложения
+
+```bash
+docker compose down
+```
+
+Данные PostgreSQL сохраняются в Docker Volume после остановки контейнеров.
+
+**Внимание:** команда `docker compose down -v` удалит также Volume с данными базы.
+
+---
+
+## Локальная разработка без полной контейнеризации
+
+Этот способ подходит для разработки и отладки backend и frontend напрямую на компьютере.
+
+### Требования
+
+- .NET 10 SDK
+- Node.js 22 и npm
+- Docker Desktop
+- EF Core CLI версии 10.x
+
+### 1. Запуск только PostgreSQL
+
+Убедитесь, что корневой `.env` настроен.
+
+Выполните:
+
+```bash
+docker compose up -d db
+```
+
+База данных будет доступна по адресу:
+
+`localhost:5433`
+
+### 2. Настройка backend
+
+Создайте локальную конфигурацию:
+
+```powershell
+Copy-Item backend/PaymentService.Api/appsettings.Development.example.json backend/PaymentService.Api/appsettings.Development.json
+```
+
+Настройте подключение к PostgreSQL и API Key:
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5433;Database=payment_service_db;Username=payment_user;Password=replace_with_local_password"
+    "DefaultConnection": "Host=localhost;Port=5433;Database=payment_service_db;Username=payment_user;Password=your_local_database_password"
   },
   "ApiSecurityKey": {
-    "Key": "replace_with_long_random_demo_key"
+    "Key": "your_long_random_demo_key"
   }
 }
 ```
 
-Укажите тот же пароль, который использовали при инициализации базы. Для демонстрационного API-ключа задайте отдельное длинное случайное значение.
+Пароль должен совпадать с паролем PostgreSQL, указанным при создании базы данных.
 
-> **Важно:** в текущем опубликованном `ApiKeyMiddleware` ключ читается по пути `ApiSecurityKey:Key`. Если вы изменили этот путь локально, название секции в JSON должно совпадать с ним. Не кладите секрет в `frontend/.env.local` или переменные с префиксом `VITE_`.
+### 3. Применение миграций
 
-### 4. Применить миграции
+При необходимости установите EF Core CLI:
 
-Проверьте наличие EF CLI:
-
-```powershell
-dotnet ef --version
+```bash
+dotnet tool install --global dotnet-ef --version 10.*
 ```
 
-Если команда отсутствует, установите инструмент версии 10.x:
+Примените миграции:
 
-```powershell
-dotnet tool install --global dotnet-ef --version 10.0.15
-```
-
-Примените существующие миграции:
-
-```powershell
+```bash
 dotnet ef database update --project backend/PaymentService.Infrastructure --startup-project backend/PaymentService.Api --context PaymentDbContext
 ```
 
-Команда создаст структуру таблиц в PostgreSQL. Вручную выполнять `CREATE TABLE` не требуется.
+### 4. Запуск backend
 
-### 5. Запустить backend
+Из корня репозитория:
 
-```powershell
+```bash
 dotnet run --project backend/PaymentService.Api --launch-profile http
 ```
 
-По текущим настройкам HTTP API доступен на `http://localhost:5190`. Фактический адрес проверьте по строке `Now listening on:` в терминале.
+Backend будет доступен по адресу:
 
-### 6. Запустить frontend
+`http://localhost:5190`
 
-Откройте **новый терминал**:
+### 5. Запуск frontend
 
-```powershell
+В отдельном терминале:
+
+```bash
 cd frontend
-npm install
+npm ci
 ```
 
-При необходимости создайте файл `frontend/.env.local`:
+Создайте `frontend/.env.local`:
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:5190
 ```
 
-Запустите интерфейс:
+Запустите Vite Dev Server:
 
-```powershell
+```bash
 npm run dev
 ```
 
-Откройте `http://localhost:5173`.
+Откройте:
 
-В поле подключения введите **демонстрационный** API Key, соответствующий конфигурации backend, и нажмите **Connect**. После этого можно создавать платежи, просматривать историю и статистику.
+`http://localhost:5173`
+
+Введите API Key, указанный в локальной конфигурации backend.
+
+---
 
 ## REST API
 
-Все маршруты требуют заголовок `X-API-Key`.
+Все эндпоинты платежей защищены API Key.
 
-| Метод | Маршрут | Назначение |
-| --- | --- | --- |
-| `POST` | `/api/payments` | Создание платежа |
-| `GET` | `/api/payments` | История платежей |
-| `GET` | `/api/payments/stats` | Статистика по валютам и дням |
-
-Пример запроса:
+Для выполнения запросов требуется заголовок:
 
 ```http
-POST http://localhost:5190/api/payments
-Content-Type: application/json
-X-API-Key: your_demo_api_key
+X-API-Key: your_long_random_demo_key
 ```
+
+| Метод | Маршрут | Назначение |
+|-------|---------|------------|
+| POST | `/api/payments` | Создание платежа |
+| GET | `/api/payments` | Получение истории платежей |
+| GET | `/api/payments/stats` | Получение статистики |
+
+### Пример создания платежа
+
+Для Docker:
+
+```http
+POST http://localhost:8080/api/payments
+Content-Type: application/json
+X-API-Key: your_long_random_demo_key
+```
+
+Тело запроса:
 
 ```json
 {
@@ -199,57 +318,124 @@ X-API-Key: your_demo_api_key
 }
 ```
 
-При успешном создании API возвращает данные платежа, включая идентификатор, статус и дату создания. Набор поддерживаемых валют: `RUB`, `USD`, `EUR`.
+При успешном выполнении возвращается HTTP `201 Created` и информация о созданном платеже.
+
+### Поддерживаемые валюты
+
+- RUB
+- USD
+- EUR
 
 ### Валидация
 
-Проверяются обязательные поля, корректность email, формат телефона при наличии, положительная сумма, допустимая валюта, а также ограничения на длину строк. Для кошелька в текущей версии предполагается строка из цифр — обязательно сохраните соответствующее правило валидатора до сдачи.
+Backend проверяет:
 
-### Статистика
+- Наличие обязательных полей
+- Номер кошелька, состоящий из цифр `0–9`
+- Корректность email
+- Формат необязательного номера телефона
+- Положительную сумму с точностью до двух знаков после запятой
+- Поддерживаемую валюту
+- Ограничения на длину полей
 
-API выдаёт общее число платежей и отдельные группы для каждой валюты. Внутри валютной группы содержатся сумма, количество и агрегаты по календарным дням UTC. **Суммы разных валют не складываются** без обменного курса.
+Некорректные запросы возвращают HTTP `400 Bad Request`.
+
+При отсутствии или неправильном API Key возвращается HTTP `401 Unauthorized`.
+
+## Статусы платежей
+
+В доменной модели предусмотрены:
+
+- `Created` — платёж создан
+- `Rejected` — платёж отклонён
+
+При успешном создании новой записи устанавливается статус `Created`.
+
+Отдельный бизнес-сценарий для перевода платежа в `Rejected` в текущей реализации отсутствует.
+
+## Статистика
+
+API предоставляет:
+
+- Общее количество платежей
+- Количество платежей по каждой валюте
+- Общую сумму отдельно для каждой валюты
+- Ежедневное количество и суммы платежей по датам UTC
+
+**Суммы разных валют не складываются**, так как в проекте нет механизма конвертации валют.
 
 ## Проверка сборки
 
-Из корня репозитория:
+Проверка backend:
 
-```powershell
+```bash
 dotnet build backend/PaymentService.slnx
 ```
 
-Для frontend:
+Проверка frontend:
 
-```powershell
+```bash
 cd frontend
+npm ci
 npm run build
 npm run lint
 ```
 
-При наличии тестового проекта его можно запустить через `dotnet test` с путём к соответствующему `.csproj`.
+## Решение распространённых проблем
 
-## Остановка сервисов
+### Ошибка 401 Unauthorized
 
-Остановить контейнер базы данных:
+Проверьте правильность API Key.
 
-```powershell
-docker compose down
+Для Docker ключ задаётся через `API_SECURITY_KEY` в `.env`.
+
+Для локальной разработки используется `ApiSecurityKey:Key` в `appsettings.Development.json`.
+
+### Ошибка подключения к PostgreSQL
+
+Проверьте контейнеры:
+
+```bash
+docker compose ps
 ```
 
-Эта команда сохраняет именованный Docker Volume. Команда `docker compose down -v` удаляет Volume с данными — **не используйте её, если данные нужно сохранить**.
+Просмотрите логи:
+
+```bash
+docker compose logs db
+```
+
+Обратите внимание: изменение `POSTGRES_PASSWORD` в `.env` не изменяет пароль пользователя уже инициализированной базы PostgreSQL в Docker Volume.
+
+### Backend не запускается
+
+Просмотрите логи API:
+
+```bash
+docker compose logs api
+```
+
+При запуске Docker API применяет EF Core Migrations, если включена настройка `Database__ApplyMigrations=true`.
+
+### Frontend показывает "Failed to fetch"
+
+Проверьте доступность backend:
+
+- Docker: `http://localhost:8080`
+- Локальная разработка: `http://localhost:5190`
+
+При локальном запуске также проверьте `VITE_API_BASE_URL` и настройки CORS.
 
 ## Безопасность и ограничения
 
-- Не отправляйте `.env`, `appsettings.Development.json` и `frontend/.env.local` с настоящими секретами в публичный репозиторий.
-- Форма ввода API Key во frontend предназначена только для локальной демонстрации. **Постоянный серверный секрет нельзя считать защищённым, если он передаётся браузеру.** Для публичной эксплуатации требуется отдельная схема авторизации / серверный посредник.
-- Сервис не выполняет реальные платежи и не содержит интеграций с платёжными системами.
-- Для больших объёмов данных статистику стоит рассчитывать запросами в PostgreSQL, а не загружать всю историю в память.
+- Приложение предназначено для демонстрации и тестирования.
+- Реальные платежи не выполняются.
+- Интеграции с платёжными шлюзами отсутствуют.
+- API Key используется для простой защиты запросов, но не заменяет полноценную аутентификацию пользователей.
+- Ввод API Key в браузере подходит только для локальной демонстрации, а не для защиты production-секретов.
+- История загружается в память приложения, а статистика рассчитывается через LINQ. При больших объёмах данных предпочтительнее агрегация в PostgreSQL и пагинация.
+- В контейнере frontend используется Vite Preview, предназначенный для проверки собранного приложения, а не для полноценного production-хостинга.
 
-## Типичные проблемы
+## Назначение проекта
 
-**`500 Internal Server Error` при сохранении:** убедитесь, что Docker-контейнер PostgreSQL запущен (`docker compose ps`) и база доступна, а затем проверьте лог backend.
-
-**Ошибка авторизации `401`:** проверьте заголовок `X-API-Key` и совпадение с `ApiSecurityKey:Key` в локальной конфигурации.
-
-**Ошибка подключения к PostgreSQL:** убедитесь, что используется `Host=localhost;Port=5433` и что пароль соответствует пользователю контейнера. Изменение `POSTGRES_PASSWORD` в `.env` **не меняет автоматически** пароль уже инициализированной базы в Docker Volume.
-
-**Ошибки CORS:** проверьте, что backend разрешает источник `http://localhost:5173`, а политика CORS выполняется до middleware проверки API Key.
+Проект разработан для демонстрации навыков full-stack разработки с использованием ASP.NET Core, React, PostgreSQL, REST API, валидации, многослойной архитектуры и Docker Compose.

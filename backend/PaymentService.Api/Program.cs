@@ -17,7 +17,6 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<PaymentDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService.Application.Services.PaymentService>();
-builder.Services.AddScoped<IValidator<CreatePaymentRequest>, CreatePaymentValidation>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreatePaymentValidation>();
 builder.Services.AddCors(options =>
 {
