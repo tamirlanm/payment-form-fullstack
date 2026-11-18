@@ -10,11 +10,11 @@ public class CreatePaymentValidation : AbstractValidator<CreatePaymentRequest>
 {
     public CreatePaymentValidation(IPaymentRepository paymentRepository)
     {
-        RuleFor(x => x.WalletNumber).NotEmpty().WithMessage("Wallet Number is required").MaximumLength(50).Matches(@"^\d+$").WithMessage("Wallet Number must contain only digits");
+        RuleFor(x => x.WalletNumber).NotEmpty().WithMessage("Wallet Number is required").MaximumLength(50).Matches(@"\A[0-9]+\z").WithMessage("Wallet Number must contain only digits");
         
         RuleFor(x => x.Account).NotEmpty().WithMessage("Account is required").MaximumLength(100);
         
-        RuleFor(x => x.Amount).GreaterThan(0);
+        RuleFor(x => x.Amount).GreaterThan(0).PrecisionScale(18,2, false).WithMessage("Amount must have at most 2 decimal places and 16 integer digits.");
         
         RuleFor(x => x.Email).NotEmpty().WithMessage("Email is required").EmailAddress().WithMessage("The email address is not valid").MaximumLength(254);
     

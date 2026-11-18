@@ -101,18 +101,37 @@ function App() {
     setError("");
     setSuccess("");
 
-    try {
-      const payment = await paymentApi.create(request, apiKey);
-      await loadData(apiKey);
+    
+try {
+  // 1. Create the payment
+  const payment = await paymentApi.create(request, apiKey);
 
-      setForm({ ...emptyForm });
-      setSuccess(`Payment ${payment.id} created successfully.`);
-      setTab("history");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Payment failed.");
-    } finally {
-      setLoading(false);
+  // 2. Payment was successfully saved
+  setForm({ ...emptyForm });
+  setSuccess(`Payment ${payment.id} created successfully.`);
+  setTab("history");
+
+  try {
+      await loadData(apiKey);
+    } catch (refreshError) {
+      console.error("Failed to refresh payment data:", refreshError);
+
+      setError(
+        "Payment was created successfully, " +
+        "but history could not be refreshed. " +
+        "Please click Refresh."
+      );
     }
+  } catch (err) {
+    setError(
+      err instanceof Error
+        ? err.message
+        : "Failed to create payment."
+    );
+  } finally {
+    setLoading(false);
+  }
+
   }
 
   async function refresh() {

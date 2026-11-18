@@ -28,7 +28,17 @@ builder.Services.AddCors(options =>
                 .WithMethods("GET", "POST");
         });
 });
+
 var app = builder.Build();
+
+if (app.Configuration.GetValue<bool>("Database:ApplyMigrations"))
+{
+    using var scope = app.Services.CreateScope();
+
+    var context = scope.ServiceProvider.GetRequiredService<PaymentDbContext>();
+    
+    await context.Database.MigrateAsync();
+}
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseRouting();
